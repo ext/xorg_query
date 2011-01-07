@@ -147,7 +147,13 @@ static PyModuleDef QueryModule = {
 };
 #endif
 
-PyMODINIT_FUNC initxorg_query(void) {
+#if (PY_MAJOR_VERSION == 3)
+#define INIT_FUNC_NAME PyInit_xorg_query
+#else
+#define INIT_FUNC_NAME initxorg_query
+#endif
+
+PyMODINIT_FUNC INIT_FUNC_NAME(void) {
 	dpy = XOpenDisplay(NULL);
 
 #if (PY_MAJOR_VERSION == 3)
