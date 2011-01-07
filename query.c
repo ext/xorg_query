@@ -153,6 +153,6 @@ PyMODINIT_FUNC initxorg_query(void) {
 #if (PY_MAJOR_VERSION == 3)
 	return PyModule_Create(&QueryModule);
 #else
-	return Py_InitModule("xorg_query", QueryMethods);
+	Py_InitModule("xorg_query", QueryMethods);
 #endif
 }
