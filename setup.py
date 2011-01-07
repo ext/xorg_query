@@ -13,6 +13,7 @@ def pkgconfig(*packages, **kw):
 
     # parse output
     for token in output.split():
+        token = token.decode()
         if token[:2] in flag_map:
             kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
             
