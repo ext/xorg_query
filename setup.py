@@ -27,7 +27,7 @@ def pkgconfig(*packages, **kw):
 
 setup(
     name = "xorg_query",
-    version = '0.1',
+    version = '0.2',
     ext_modules = [
         Extension('xorg_query', ['query.c'], **pkgconfig('x11', 'xrandr'))
     ],
