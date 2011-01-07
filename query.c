@@ -140,13 +140,19 @@ static PyMethodDef QueryMethods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
+#if (PY_MAJOR_VERSION == 3)
+static PyModuleDef QueryModule = {
+    PyModuleDef_HEAD_INIT, "xorg_query", NULL, -1, QueryMethods,
+    NULL, NULL, NULL, NULL
+};
+#endif
+
 PyMODINIT_FUNC initxorg_query(void) {
-	PyObject* m;
-
-	m = Py_InitModule("xorg_query", QueryMethods);
-	if ( !m ){
-		return;
-	}
-
 	dpy = XOpenDisplay(NULL);
+
+#if (PY_MAJOR_VERSION == 3)
+	return PyModule_Create(&QueryModule);
+#else
+	return Py_InitModule("xorg_query", QueryMethods);
+#endif
 }
