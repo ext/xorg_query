@@ -1,0 +1,11 @@
+Python module to query xorg for information about displays, screens, resolutions etc.
+
+>>> import xorg_query
+>>> xorg_query.screens()
+[':0.0', ':0.1']
+>>> xorg_query.current_resolution()
+(1280, 1024)
+>>> xorg_query.current_resolution(':0.1')
+(1920, 1080)
+
+etc.
