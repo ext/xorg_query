@@ -28,7 +28,7 @@ def pkgconfig(*packages, **kw):
 
 setup(
     name = "xorg_query",
-    version = '0.2',
+    version = '0.5',
     author = 'David Sveningsson',
     author_email = 'ext@sidvind.com',
     ext_modules = [
