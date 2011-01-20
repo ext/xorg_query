@@ -16,28 +16,29 @@ static float mode_refresh (XRRModeInfo *mode_info){
 /**
  * Parse a display string to a screen number.
  *
- * N -> N
- * :X.N -> N
+ * N     -> display, DefaultScreen
+ * :N    -> display, DefaultScreen
+ * N.M   -> display, screen
+ * :N.M  -> display, screen
  *
- * @param display_string
+ * @param zero if succesful.
  */
-static int parse_screen(const char* display_string){
-	int screen = 0;
-
+static int parse_screen(const char* display_string, int* display, int* screen){
 	if ( !display_string ){
-		return DefaultScreen(dpy);
+		return parse_screen(DisplayString(dpy), display, screen);
 	} else if ( display_string[0] == ':' ){
-		sscanf(display_string, ":%*d.%d", &screen);
+		sscanf(display_string, ":%d.%d", display, screen);
 	} else {
-		sscanf(display_string, "%d", &screen);
+		*screen = DefaultScreen(dpy);
+		sscanf(display_string, "%d", display);
 	}
 
-	return screen;
+	return 0;
 }
 
 static PyObject* query_screens(PyObject *self, PyObject *args) {
 	PyObject* l = NULL;
-	int n = 0, i = 0;
+	int n = 0, display = 0, screen = 0;
 	char buf[16];
 
 	if ( !dpy ){
@@ -45,12 +46,13 @@ static PyObject* query_screens(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
+	parse_screen(NULL, &display, &screen);
 	n = XScreenCount(dpy);
 	l = PyList_New(n);
 
-	for ( i = 0; i < n; i++ ){
-		snprintf(buf, 16, ":0.%d", i);
-		PyList_SET_ITEM(l, i, Py_BuildValue("s", buf));
+	for ( screen = 0; screen < n; screen++ ){
+		snprintf(buf, 16, ":%d.%d", display, screen);
+		PyList_SET_ITEM(l, screen, Py_BuildValue("s", buf));
 	}
 
 	return l;
@@ -58,7 +60,7 @@ static PyObject* query_screens(PyObject *self, PyObject *args) {
 
 static PyObject* query_resolution(PyObject *self, PyObject *args) {
 	char* string = NULL;
-	int screen, o;
+	int display, screen, o;
 	Window root;
 	XRRScreenResources* res;
 	PyObject* l;
@@ -77,7 +79,7 @@ static PyObject* query_resolution(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	screen = parse_screen(string);
+	parse_screen(string, &display, &screen);
 	root = XRootWindow(dpy, screen);
 
 	XRRGetScreenSizeRange(dpy, root, &min_width, &min_height, &max_width, &max_height);
@@ -97,7 +99,7 @@ static PyObject* query_resolution(PyObject *self, PyObject *args) {
 static PyObject* query_current_resolution(PyObject* self, PyObject* args, PyObject* kwargs) {
 	char* string = NULL;
 	char use_rotation;
-	int screen, num_sizes;
+	int display, screen, num_sizes;
 	XRRScreenSize* xrrs;
 	Rotation rotation;
 	int width, height;
@@ -112,8 +114,7 @@ static PyObject* query_current_resolution(PyObject* self, PyObject* args, PyObje
 		return NULL;
 	}
 
-	screen = parse_screen(string);
-
+	parse_screen(string, &display, &screen);
 	xrrs = XRRSizes(dpy, screen, &num_sizes);
 	XRRRotations(dpy, screen, &rotation);
 
