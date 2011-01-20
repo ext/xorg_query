@@ -9,7 +9,12 @@ def pkgconfig(*packages, **kw):
 
     # run pkg-config
     args = ['pkg-config', '--libs', '--cflags'] + list(packages)
-    output = Popen(args, stdout=PIPE, stderr=STDOUT).communicate()[0]
+    proc = Popen(args, stdout=PIPE, stderr=STDOUT)
+    output = proc.communicate()[0]
+    
+    if proc.returncode != 0:
+        print >> sys.stderr, output
+        sys.exit(1)
 
     # parse output
     for token in output.split():
