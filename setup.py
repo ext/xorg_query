@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages, Extension
 from subprocess import Popen, PIPE, STDOUT
+import sys
 
 # Based on http://code.activestate.com/recipes/502261-python-distutils-pkg-config/
 # but replaced commands.getoutput with subprocess and some other minor fixes.
