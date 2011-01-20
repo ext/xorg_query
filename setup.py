@@ -37,6 +37,8 @@ setup(
     version = '0.5',
     author = 'David Sveningsson',
     author_email = 'ext@sidvind.com',
+    url = 'https://github.com/ext/xorg_query',
+    description = 'Python module to query xorg for information about displays, screens, resolutions etc.',
     ext_modules = [
         Extension('xorg_query', ['query.c'], extra_link_args=['-Wl,--as-needed'], **pkgconfig('x11', 'xrandr'))
     ],
