@@ -36,6 +36,10 @@ static int parse_screen(const char* display_string, int* display, int* screen){
 	return 0;
 }
 
+static PyObject* display_string(){
+	return Py_BuildValue("s", DisplayString(dpy));
+}
+
 static PyObject* query_screens(PyObject *self, PyObject *args) {
 	PyObject* l = NULL;
 	int n = 0, display = 0, screen = 0;
@@ -135,6 +139,7 @@ static PyObject* query_current_resolution(PyObject* self, PyObject* args, PyObje
 
 //Method table
 static PyMethodDef QueryMethods[] = {
+	{"display_string", display_string, METH_NOARGS, "Returns the string that was passed to XOpenDisplay when the current display was opened."},
 	{"screens", query_screens, METH_VARARGS, "List all screens"},
 	{"resolutions", query_resolution, METH_VARARGS, "List all resolutions for a screen. Defaults to current screen"},
 	{"current_resolution", (PyCFunction)query_current_resolution,  METH_VARARGS|METH_KEYWORDS, "Get current resolution for a screen. Defaults to current screen"},
