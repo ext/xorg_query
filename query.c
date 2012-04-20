@@ -73,6 +73,7 @@ static PyObject* query_screens(PyObject *self, PyObject *args) {
 static PyObject* query_resolution(PyObject *self, PyObject *args) {
 	char* string = NULL;
 	int display, screen, o;
+	Display* dpy;
 	Window root;
 	XRRScreenResources* res;
 	PyObject* l;
@@ -86,31 +87,30 @@ static PyObject* query_resolution(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	if ( !dpy ){
-		PyErr_SetString(PyExc_RuntimeError, "Failed to open X Display");
-		return NULL;
+	/* try to open the display */
+	if ( (dpy=XOpenDisplay(string)) == NULL ){
+		return PyErr_Format(PyExc_ValueError, "Can't open display: %s\n", string);
 	}
 
+	/* parse the string to get screen number */
 	if ( parse_screen(string, &display, &screen) != 0 ){
 		return PyErr_Format(PyExc_ValueError, "Failed to parse display `%s'", string);
 	}
 
+	/* retrieve the screen sizes */
 	root = XRootWindow(dpy, screen);
-	if ( root == None ){
-		PyErr_Format(PyExc_ValueError, "Can't open display: %s", string);
-		return NULL;
-	}
-
 	XRRGetScreenSizeRange(dpy, root, &min_width, &min_height, &max_width, &max_height);
 	res = XRRGetScreenResources (dpy, root);
 
+	/* create a python list with the resolutions */
 	l = PyList_New(res->nmode);
-
 	for ( o = 0; o < res->nmode; o++ ){
 		PyList_SET_ITEM(l, o, Py_BuildValue("(iif)", res->modes[o].width, res->modes[o].height, mode_refresh(&res->modes[o])));
 	}
 
+	/* free resources */
 	XRRFreeScreenResources(res);
+	XCloseDisplay(dpy);
 
 	return l;
 }
