@@ -26,14 +26,21 @@ static float mode_refresh (XRRModeInfo *mode_info){
 static int parse_screen(const char* display_string, int* display, int* screen){
 	if ( !display_string ){
 		return parse_screen(DisplayString(dpy), display, screen);
-	} else if ( display_string[0] == ':' ){
-		sscanf(display_string, ":%d.%d", display, screen);
-	} else {
-		*screen = DefaultScreen(dpy);
-		sscanf(display_string, "%d", display);
 	}
 
-	return 0;
+	if ( display_string[0] == ':' ){
+		display_string++; /* ignore : */
+	}
+
+	switch ( sscanf(display_string, "%d.%d", display, screen) ){
+	case 2:
+		return 0;
+	case 1:
+		*screen = DefaultScreen(dpy);
+		return 0;
+	default:
+		return 1;
+	}
 }
 
 static PyObject* display_string(){
