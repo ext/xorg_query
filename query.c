@@ -14,17 +14,21 @@ static float mode_refresh (XRRModeInfo *mode_info){
 }
 
 /**
- * Parse a display string to a screen number.
+ * Parse a display string to a screen number and return a normalized string.
  *
  * N     -> display, DefaultScreen
  * :N    -> display, DefaultScreen
  * N.M   -> display, screen
  * :N.M  -> display, screen
  *
- * @param zero if succesful.
+ * @param display_string string or NULL for default.
+ * @return NULL on errors and a normalized string if successful (pointing to static memory)
  * @bug Does not handle hostname.
  */
-static int parse_screen(const char* display_string, int* display, int* screen){
+static const char* parse_screen(const char* display_string, int* display, int* screen){
+	static char buffer[128];
+
+	/* use default string */
 	if ( !display_string ){
 		return parse_screen(DisplayString(dpy), display, screen);
 	}
@@ -35,13 +39,17 @@ static int parse_screen(const char* display_string, int* display, int* screen){
 
 	switch ( sscanf(display_string, "%d.%d", display, screen) ){
 	case 2:
-		return 0;
+		break;
 	case 1:
 		*screen = DefaultScreen(dpy);
-		return 0;
+		break;
 	default:
-		return 1;
+		return NULL;
 	}
+
+	/* create a normalized string */
+	snprintf(buffer, sizeof(buffer), ":%d.%d", *display, *screen);
+	return buffer;
 }
 
 static PyObject* display_string(){
@@ -72,6 +80,7 @@ static PyObject* query_screens(PyObject *self, PyObject *args) {
 
 static PyObject* query_resolution(PyObject *self, PyObject *args) {
 	char* string = NULL;
+	const char* normalized = NULL;
 	int display, screen, o;
 	Display* dpy;
 	Window root;
@@ -87,14 +96,14 @@ static PyObject* query_resolution(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	/* try to open the display */
-	if ( (dpy=XOpenDisplay(string)) == NULL ){
-		return PyErr_Format(PyExc_ValueError, "Can't open display: %s\n", string);
+	/* parse the string to get screen number */
+	if ( (normalized=parse_screen(string, &display, &screen)) == NULL ){
+		return PyErr_Format(PyExc_ValueError, "Failed to parse display `%s'", string);
 	}
 
-	/* parse the string to get screen number */
-	if ( parse_screen(string, &display, &screen) != 0 ){
-		return PyErr_Format(PyExc_ValueError, "Failed to parse display `%s'", string);
+	/* try to open the display */
+	if ( (dpy=XOpenDisplay(normalized)) == NULL ){
+		return PyErr_Format(PyExc_ValueError, "Can't open display: %s\n", normalized);
 	}
 
 	/* retrieve the screen sizes */
