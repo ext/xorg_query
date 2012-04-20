@@ -126,8 +126,10 @@ static PyObject* query_resolution(PyObject *self, PyObject *args) {
 
 static PyObject* query_current_resolution(PyObject* self, PyObject* args, PyObject* kwargs) {
 	char* string = NULL;
+	const char* normalized = NULL;
 	char use_rotation;
 	int display, screen, num_sizes;
+	Display* dpy;
 	XRRScreenSize* xrrs;
 	Rotation rotation;
 	int width, height;
@@ -137,13 +139,20 @@ static PyObject* query_current_resolution(PyObject* self, PyObject* args, PyObje
 		return NULL;
 	}
 
-	if ( !dpy ){
-		PyErr_SetString(PyExc_RuntimeError, "Failed to open X Display");
-		return NULL;
+	/* parse the string to get screen number */
+	if ( (normalized=parse_screen(string, &display, &screen)) == NULL ){
+		return PyErr_Format(PyExc_ValueError, "Failed to parse display `%s'", string);
 	}
 
-	parse_screen(string, &display, &screen);
+	/* try to open the display */
+	if ( (dpy=XOpenDisplay(normalized)) == NULL ){
+		return PyErr_Format(PyExc_ValueError, "Can't open display: %s\n", normalized);
+	}
+
 	xrrs = XRRSizes(dpy, screen, &num_sizes);
+	if ( !xrrs ){
+		return PyErr_Format(PyExc_RuntimeError, "XRRSizes unexpectedly returned NULL");
+	}
 	XRRRotations(dpy, screen, &rotation);
 
 	width = xrrs->width;
@@ -158,6 +167,7 @@ static PyObject* query_current_resolution(PyObject* self, PyObject* args, PyObje
 		}
 	}
 
+	XCloseDisplay(dpy);
 	return Py_BuildValue("(ii)", width, height);
 }
 
