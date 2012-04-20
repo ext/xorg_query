@@ -83,7 +83,10 @@ static PyObject* query_resolution(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	parse_screen(string, &display, &screen);
+	if ( parse_screen(string, &display, &screen) != 0 ){
+		return PyErr_Format(PyExc_ValueError, "Failed to parse display `%s'", string);
+	}
+
 	root = XRootWindow(dpy, screen);
 	if ( root == None ){
 		PyErr_Format(PyExc_ValueError, "Can't open display: %s", string);
