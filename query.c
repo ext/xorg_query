@@ -85,6 +85,10 @@ static PyObject* query_resolution(PyObject *self, PyObject *args) {
 
 	parse_screen(string, &display, &screen);
 	root = XRootWindow(dpy, screen);
+	if ( root == None ){
+		PyErr_SetFormat(PyExc_ValueError, "Can't open display %s", string);
+		return NULL;
+	}
 
 	XRRGetScreenSizeRange(dpy, root, &min_width, &min_height, &max_width, &max_height);
 	res = XRRGetScreenResources (dpy, root);
