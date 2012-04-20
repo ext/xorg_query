@@ -22,6 +22,7 @@ static float mode_refresh (XRRModeInfo *mode_info){
  * :N.M  -> display, screen
  *
  * @param zero if succesful.
+ * @bug Does not handle hostname.
  */
 static int parse_screen(const char* display_string, int* display, int* screen){
 	if ( !display_string ){
